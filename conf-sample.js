@@ -2,13 +2,19 @@ var c = module.exports = {}
 
 // mongo configuration
 c.mongo = {}
+c.mongo.db = 'zenbot4'
+
+// Must provide EITHER c.mongo.connectionString OR c.mongo.host,port,username,password
+// c.mongo.connectionString = 'mongodb://u:p@host/db?params'
+
+// The following is not needed when c.mongo.connectionString is provided:
 c.mongo.host = process.env.MONGODB_PORT_27017_TCP_ADDR || 'localhost'
 c.mongo.port = 27017
-c.mongo.db = 'zenbot4'
 c.mongo.username = null
 c.mongo.password = null
 // when using mongodb replication, i.e. when running a mongodb cluster, you can define your replication set here; when you are not using replication (most of the users), just set it to `null` (default).
 c.mongo.replicaSet = null
+c.mongo.authMechanism = null
 
 // default selector. only used if omitting [selector] argument from a command.
 c.selector = 'gdax.BTC-USD'
@@ -36,7 +42,7 @@ c.kraken.secret = 'YOUR-SECRET'
 // Please read API TOS on https://www.kraken.com/u/settings/api
 c.kraken.tosagree = 'disagree'
 
-// to enable Binance trading, etner your API credentials:
+// to enable Binance trading, enter your API credentials:
 c.binance = {}
 c.binance.key = 'YOUR-API-KEY'
 c.binance.secret = 'YOUR-SECRET'
@@ -53,7 +59,7 @@ c.bittrex.secret = 'YOUR-SECRET'
 c.bitfinex = {}
 c.bitfinex.key = 'YOUR-API-KEY'
 c.bitfinex.secret = 'YOUR-SECRET'
-// May use 'exchange' or 'trading' wallet balances. However margin trading may not work...read the API documentation.
+// May use 'exchange' or 'margin' wallet balances
 c.bitfinex.wallet = 'exchange'
 
 // to enable Bitstamp trading, enter your API credentials:
@@ -124,6 +130,8 @@ c.sell_pct = 99
 c.order_adjust_time = 5000
 // avoid selling at a loss below this pct set to 0 to ensure selling at a higher price...
 c.max_sell_loss_pct = 25
+// avoid buying at a loss above this pct set to 0 to ensure buying at a lower price...
+c.max_buy_loss_pct = 25
 // ms to poll order status
 c.order_poll_time = 5000
 // ms to wait for settlement (after an order cancel)
@@ -136,11 +144,15 @@ c.markup_sell_pct = 0
 c.order_type = 'maker'
 // when supported by the exchange, use post only type orders.
 c.post_only = true
+// use separated fee currency such as binance's BNB.
+c.use_fee_asset = false
 
 // Misc options:
 
 // default # days for backfill and sim commands
 c.days = 14
+// defaults to a high number of lookback periods
+c.keep_lookback_periods = 50000
 // ms to poll new trades at
 c.poll_trades = 30000
 // amount of currency to start simulations with
@@ -157,6 +169,10 @@ c.balance_snapshot_period = '15m'
 c.avg_slippage_pct = 0.045
 // time to leave an order open, default to 1 day (this feature is not supported on all exchanges, currently: GDAX)
 c.cancel_after = 'day'
+// load and use previous trades for stop-order triggers and loss protection (live/paper mode only)
+c.use_prev_trades = false
+// minimum number of previous trades to load if use_prev_trades is enabled, set to 0 to disable and use trade time instead
+c.min_prev_trades = 0
 
 // Notifiers:
 c.notifiers = {}
@@ -196,6 +212,9 @@ c.notifiers.discord = {}
 c.notifiers.discord.on = false // false discord disabled; true discord enabled (key should be correct)
 c.notifiers.discord.id = 'YOUR-WEBHOOK-ID'
 c.notifiers.discord.token = 'YOUR-WEBHOOK-TOKEN'
+c.notifiers.discord.username = '' // default "Zenbot"
+c.notifiers.discord.avatar_url = ''
+c.notifiers.discord.color = null // color as a decimal
 // end discord configs
 
 // prowl configs
@@ -211,10 +230,26 @@ c.notifiers.textbelt.phone = '3121234567'
 c.notifiers.textbelt.key = 'textbelt'
 // end textbelt configs
 
+// pushover configs
+c.notifiers.pushover = {}
+c.notifiers.pushover.on = false // false pushover disabled; true pushover enabled (keys should be correct)
+c.notifiers.pushover.token = 'YOUR-API-TOKEN' // create application and supply the token here
+c.notifiers.pushover.user = 'YOUR-USER-KEY' // this is your own user's key (not application related)
+c.notifiers.pushover.priority = '0' // choose a priority to send zenbot messages with, see https://pushover.net/api#priority
+// end pushover configs
+
+// telegram configs
+c.notifiers.telegram = {}
+c.notifiers.telegram.on = false // false telegram disabled; true telegram enabled (key should be correct)
+c.notifiers.telegram.bot_token = 'YOUR-BOT-TOKEN'
+c.notifiers.telegram.chat_id = 'YOUR-CHAT-ID' // the id of the chat the messages should be send in
+// end telegram configs
+
 // output
 c.output  = {}
 
 // REST API
 c.output.api = {}
 c.output.api.on = true
+c.output.api.ip = '0.0.0.0' // IPv4 or IPv6 address to listen on, uses all available interfaces if omitted
 c.output.api.port = 0 // 0 = random port

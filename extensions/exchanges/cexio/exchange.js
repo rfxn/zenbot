@@ -1,9 +1,13 @@
 const CEX = require('cexio-api-node')
 var path = require('path')
 var n = require('numbro')
+var minimist = require('minimist')
 
-module.exports = function container (get, set, clear) {
-  var c = get('conf')
+module.exports = function cexio (conf) {
+  var s = {
+    options: minimist(process.argv)
+  }
+  var so = s.options
 
   var public_client, authed_client
 
@@ -16,12 +20,10 @@ module.exports = function container (get, set, clear) {
 
   function authedClient () {
     if (!authed_client) {
-      if (!c.cexio || !c.cexio.username || !c.cexio.key || c.cexio.key === 'YOUR-API-KEY') {
+      if (!conf.cexio || !conf.cexio.username || !conf.cexio.key || conf.cexio.key === 'YOUR-API-KEY') {
         throw new Error('please configure your CEX.IO credentials in ' + path.resolve(__dirname, 'conf.js'))
       }
-      var nonce = new Date().getTime() / 1000
-      authed_client = new CEX(c.cexio.username, c.cexio.key, c.cexio.secret).rest
-      authed_client.nonce = function () { return nonce++ }
+      authed_client = new CEX(conf.cexio.username, conf.cexio.key, conf.cexio.secret).rest
     }
     return authed_client
   }
@@ -31,7 +33,7 @@ module.exports = function container (get, set, clear) {
   }
 
   function retry (method, args) {
-    if (method !== 'getTrades') {
+    if (so.debug && method !== 'getTrades') {
       console.error(('\nCEX.IO API is down! unable to call ' + method + ', retrying in 10s').red)
     }
     setTimeout(function () {
@@ -39,13 +41,32 @@ module.exports = function container (get, set, clear) {
     }, 10000)
   }
 
+  function refreshFees(args) {
+    var skew = 5000 // in ms
+    var now = new Date()
+    var nowUTC = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds())
+    var midnightUTC = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()).setHours(24,0,0,0)
+    var countdown = midnightUTC - nowUTC + skew
+    if (so.debug) {
+      var hours = parseInt((countdown/(1000*60*60))%24)
+      var minutes = parseInt((countdown/(1000*60))%60)
+      var seconds = parseInt((countdown/1000)%60)
+      console.log('\nRefreshing fees in ' + hours + ' hours ' + minutes + ' minutes ' + seconds + ' seconds')
+    }
+    setTimeout(function() {
+      exchange['setFees'].apply(exchange, args)
+    }, countdown)
+  }
+
   var orders = {}
   var exchange = {
     name: 'cexio',
     historyScan: 'forward',
     backfillRateLimit: 0,
-    makerFee: 0,
-    takerFee: 0.2,
+    makerFee: 0.16,
+    takerFee: 0.25,
+    dynamicFees: true,
+    makerBuy100Workaround: true,
 
     getProducts: function () {
       return require('./products.json')
@@ -53,16 +74,17 @@ module.exports = function container (get, set, clear) {
 
     getTrades: function (opts, cb) {
       var func_args = [].slice.call(arguments)
-      if (typeof opts.from === 'undefined') {
-        var args = 1000
+      var args
+      if (typeof opts.from === 'undefined' && opts.product_id === 'BTC-USD') {
+        args = 2000000
       } else {
         args = opts.from
       }
       var client = publicClient()
       var pair = joinProduct(opts.product_id)
       client.trade_history(pair, args, function (err, body) {
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ngetTrades ' + body).red)
-        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getTrades', func_args, body)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ngetTrades ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getTrades', func_args)
         var trades = body.map(function (trade) {
           return {
             trade_id: Number(trade.tid),
@@ -80,8 +102,8 @@ module.exports = function container (get, set, clear) {
       var func_args = [].slice.call(arguments)
       var client = authedClient()
       client.account_balance(function (err, body) {
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ngetBalance ' + body).red)
-        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getBalance', func_args, body)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ngetBalance ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getBalance', func_args)
         var balance = { asset: 0, currency: 0 }
         balance.currency = n(body[opts.currency].available).add(body[opts.currency].orders).format('0.00000000')
         balance.currency_hold = n(body[opts.currency].orders).format('0.00000000')
@@ -96,8 +118,8 @@ module.exports = function container (get, set, clear) {
       var client = publicClient()
       var pair = joinProduct(opts.product_id)
       client.ticker(pair, function (err, body) {
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ngetQuote ' + body).red)
-        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getQuote', func_args, body)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ngetQuote ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getQuote', func_args)
         cb(null, { bid: String(body.bid), ask: String(body.ask) })
       })
     },
@@ -106,9 +128,8 @@ module.exports = function container (get, set, clear) {
       var func_args = [].slice.call(arguments)
       var client = authedClient()
       client.cancel_order(opts.order_id, function (err, body) {
-        //if (body === 'Order canceled') return cb()
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ncancelOrder ' + body).red)
-        if (err) return retry('cancelOrder', func_args, err)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ncancelOrder ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/) && body !== 'error: Error: Order not found')) return retry('cancelOrder', func_args)
         cb()
       })
     },
@@ -126,8 +147,8 @@ module.exports = function container (get, set, clear) {
         opts.type = 'market'
       }
       client.place_order(pair, action, opts.size, opts.price, opts.type, function (err, body) {
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ntrade ' + body).red)
-        if (err || (typeof body === 'string' && body.match(/error/) && body !== 'error: Error: Place order error: Insufficient funds.')) return retry('trade', func_args, body)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ntrade ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/) && body !== 'error: Error: Place order error: Insufficient funds.')) return retry('trade', func_args)
         if (body === 'error: Error: Place order error: Insufficient funds.') {
           var order = {
             status: 'rejected',
@@ -164,8 +185,8 @@ module.exports = function container (get, set, clear) {
       var order = orders['~' + opts.order_id]
       var client = authedClient()
       client.get_order_details(opts.order_id, function (err, body) {
-        if (typeof body === 'string' && body.match(/error/)) console.log(('\ngetOrder ' + body).red)
-        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getOrder', func_args, body)
+        if (so.debug && typeof body === 'string' && body.match(/error/)) console.log(('\ngetOrder ' + body).red)
+        if (err || (typeof body === 'string' && body.match(/error/))) return retry('getOrder', func_args)
         if (body.status === 'c') {
           order.status = 'rejected'
           order.reject_reason = 'canceled'
@@ -176,6 +197,32 @@ module.exports = function container (get, set, clear) {
           order.filled_size = n(body.amount).subtract(body.remains).format('0.00000000')
         }
         cb(null, order)
+      })
+    },
+
+    setFees: function(opts) {
+      var func_args = [].slice.call(arguments)
+      var client = authedClient()
+      client.get_my_fee(function (err, body) {
+        if (err || (typeof body === 'string' && body.match(/error/))) {
+          if (so.debug) {
+            console.log(('\nsetFees ' + body + ' - using fixed fees!').red)
+          }
+          return retry('setFees', func_args)
+        } else {
+          var pair = opts.asset + ':' + opts.currency
+          var makerFee = (parseFloat(body[pair].buyMaker) + parseFloat(body[pair].sellMaker)) / 2
+          var takerFee = (parseFloat(body[pair].buy) + parseFloat(body[pair].sell)) / 2
+          if (exchange.makerFee != makerFee) {
+            if (so.debug) console.log('\nMaker fee changed: ' + exchange.makerFee + '% -> ' + makerFee + '%')
+            exchange.makerFee = makerFee
+          }
+          if (exchange.takerFee != takerFee) {
+            if (so.debug) console.log('\nTaker fee changed: ' + exchange.takerFee + '% -> ' + takerFee + '%')
+            exchange.takerFee = takerFee
+          }
+        }
+        return refreshFees(func_args)
       })
     },
 

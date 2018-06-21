@@ -1,7 +1,9 @@
-![zenbot logo](https://rawgit.com/carlos8f/zenbot/master/assets/logo.png)
+![zenbot logo](https://rawgit.com/deviavir/zenbot/master/assets/logo.png)
 
 > “To follow the path, look to the master, follow the master, walk with the master, see through the master, become the master.”
 > – Zen Proverb
+
+# Zenbot [![Build/Test Status](https://travis-ci.org/DeviaVir/zenbot.svg?branch=master)](https://travis-ci.org/DeviaVir/zenbot) [![Greenkeeper badge](https://badges.greenkeeper.io/DeviaVir/zenbot.svg)](https://greenkeeper.io/)
 
 ## Current Status
 
@@ -15,6 +17,9 @@ Zenbot 4 is functional, but is having trouble reliably making profit. At this po
 
 Zenbot is a hobby project for me and I'm sorry that I can't devote myself full-time to it. Since I'm getting busier, development may slow down a bit from here, so please be patient if issues aren't fixed right away.
 
+## Questions
+Please ask (programming) questions related to zenbot on stackoverflow. The tag is [zenbot](https://stackoverflow.com/questions/tagged/zenbot).
+
 ## Description
 
 Zenbot is a command-line cryptocurrency trading bot using Node.js and MongoDB. It features:
@@ -26,6 +31,10 @@ Zenbot is a command-line cryptocurrency trading bot using Node.js and MongoDB. I
 - "Paper" trading mode, operates on a simulated balance while watching the live market
 - Configurable sell stops, buy stops, and (trailing) profit stops
 - Flexible sampling period and trade frequency - averages 1-2 trades/day with 1h period, 15-50/day with 5m period
+
+### Community
+
+Join the Zenbot community on [Reddit](https://reddit.com/r/zenbot)!
 
 ## Disclaimer
 
@@ -40,20 +49,20 @@ Zenbot is a command-line cryptocurrency trading bot using Node.js and MongoDB. I
 ### Step 1) Requirements
 
 - Windows / Linux / macOS 10 (or Docker)
-- [Node.js](https://nodejs.org/) (version 8 or higher) and [MongoDB](https://www.mongodb.com/).
+- [Node.js](https://nodejs.org/) (version 8.3.0 or higher) and [MongoDB](https://www.mongodb.com/).
 
 ### Step 2) Install zenbot 4
 
 Run in your console,
 
 ```
-git clone https://github.com/carlos8f/zenbot.git
+git clone https://github.com/deviavir/zenbot.git
 ```
 
 Or, without git,
 
 ```
-wget https://github.com/carlos8f/zenbot/archive/master.tar.gz
+wget https://github.com/deviavir/zenbot/archive/master.tar.gz
 tar -xf zenbot-master.tar.gz
 mv zenbot-master zenbot
 ```
@@ -81,7 +90,9 @@ npm link
 ```
 
 ### Ubuntu 16.04 Step-By-Step
-https://youtu.be/BEhU55W9pBI
+[Video](https://youtu.be/BEhU55W9pBI)
+[Blog Post](https://jaynagpaul.com/algorithmic-crypto-trading?utm_source=zenbot)
+
 ```
 sudo apt-get update
 sudo apt-get upgrade -y
@@ -90,7 +101,7 @@ sudo apt-get install build-essential mongodb -y
 curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-git clone https://github.com/carlos8f/zenbot.git
+git clone https://github.com/deviavir/zenbot.git
 cd zenbot
 npm install
 
@@ -106,7 +117,6 @@ After installing (step 2 above),
 
 ```
 cd zenbot
-docker-compose build
 docker-compose up (-d if you don't want to see the log)
 ```
 
@@ -122,6 +132,17 @@ If you wish to run commands (e.g. backfills, list-selectors), you can run this s
 docker-compose exec server zenbot list-selectors
 docker-compose exec server zenbot backfill <selector> --days <days>
 ```
+
+#### Updating docker
+
+In case you are behind on updates, you can run:
+```
+docker pull deviavir/zenbot:unstable
+```
+And re-run `docker-compose up -d` to start the new image.
+
+`deviavir/zenbot` is automatically updated after every merge.
+You can follow the tags/builds here: https://hub.docker.com/r/deviavir/zenbot/builds/
 
 ## Selectors
 
@@ -156,6 +177,13 @@ To backfill data (provided that your chosen exchange supports it), use:
 ```
 zenbot backfill <selector> --days <days>
 ```
+
+You can also select start and end date:
+
+```
+zenbot backfill <selector> --start="YYYYMMDDhhmm" --end="YYYYMMDDhhmm"
+```
+Note you can use them separately.
 
 After you've backfilled, you can run a simulation:
 
@@ -226,32 +254,43 @@ zenbot trade --help
 
   Options:
 
-    --conf <path>                   path to optional conf overrides file
-    --strategy <name>               strategy to use
-    --order_type <type>             order type to use (maker/taker)
-    --paper                         use paper trading mode (no real trades will take place)
-    --manual                        watch price and account balance, but do not perform trades automatically
-    --currency_capital <amount>     for paper trading, amount of start capital in currency
-    --asset_capital <amount>        for paper trading, amount of start capital in asset
-    --avg_slippage_pct <pct>        avg. amount of slippage to apply to paper trades
-    --buy_pct <pct>                 buy with this % of currency balance
-    --sell_pct <pct>                sell with this % of asset balance
-    --markdown_buy_pct <pct>        % to mark down buy price (previously the --markup_pct property)
-    --markup_sell_pct <pct>         % to mark up sell price (previously the --markup_pct property)
-    --order_adjust_time <ms>        adjust bid/ask on this interval to keep orders competitive
-    --order_poll_time <ms>          poll order status on this interval
-    --sell_stop_pct <pct>           sell if price drops below this % of bought price
-    --buy_stop_pct <pct>            buy if price surges above this % of sold price
-    --profit_stop_enable_pct <pct>  enable trailing sell stop when reaching this % profit
-    --profit_stop_pct <pct>         maintain a trailing stop this % below the high-water mark of profit
-    --max_sell_loss_pct <pct>       avoid selling at a loss pct under this float
-    --max_slippage_pct <pct>        avoid selling at a slippage pct above this float
-    --rsi_periods <periods>         number of periods to calculate RSI at
-    --poll_trades <ms>              poll new trades at this interval in ms
-    --disable_stats                 disable printing order stats
-    --reset_profit                  start new profit calculation from 0
-    --debug                         output detailed debug info
-    -h, --help                      output usage information
+    --conf <path>                     path to optional conf overrides file
+    --strategy <name>                 strategy to use
+    --order_type <type>               order type to use (maker/taker)
+    --paper                           use paper trading mode (no real trades will take place)
+    --manual                          watch price and account balance, but do not perform trades automatically
+    --non_interactive                 disable keyboard inputs to the bot
+    --currency_capital <amount>       for paper trading, amount of start capital in currency
+    --asset_capital <amount>          for paper trading, amount of start capital in asset
+    --avg_slippage_pct <pct>          avg. amount of slippage to apply to paper trades
+    --buy_pct <pct>                   buy with this % of currency balance
+    --deposit <amt>                   absolute initial capital (in currency) at the bots disposal (previously --buy_max_amt)
+    --sell_pct <pct>                  sell with this % of asset balance
+    --markdown_buy_pct <pct>          % to mark down buy price
+    --markup_sell_pct <pct>           % to mark up sell price
+    --order_adjust_time <ms>          adjust bid/ask on this interval to keep orders competitive
+    --order_poll_time <ms>            poll order status on this interval
+    --sell_stop_pct <pct>             sell if price drops below this % of bought price
+    --buy_stop_pct <pct>              buy if price surges above this % of sold price
+    --profit_stop_enable_pct <pct>    enable trailing sell stop when reaching this % profit
+    --profit_stop_pct <pct>           maintain a trailing stop this % below the high-water mark of profit
+    --max_sell_loss_pct <pct>         avoid selling at a loss pct under this float
+    --max_buy_loss_pct <pct>          avoid buying at a loss pct over this float
+    --max_slippage_pct <pct>          avoid selling at a slippage pct above this float
+    --rsi_periods <periods>           number of periods to calculate RSI at
+    --poll_trades <ms>                poll new trades at this interval in ms
+    --currency_increment <amount>     Currency increment, if different than the asset increment
+    --keep_lookback_periods <amount>  Keep this many lookback periods max.
+    --exact_buy_orders                instead of only adjusting maker buy when the price goes up, adjust it if price has changed at all
+    --exact_sell_orders               instead of only adjusting maker sell when the price goes down, adjust it if price has changed at all
+    --use_prev_trades                 load and use previous trades for stop-order triggers and loss protection
+    --min_prev_trades                 minimum number of previous trades to load if use_prev_trades is enabled, set to 0 to disable and use trade time instead
+    --disable_stats                   disable printing order stats
+    --reset_profit                    start new profit calculation from 0
+    --use_fee_asset                   Using separated asset to pay for fees. Such as binance's BNB or Huobi's HT
+    --run_for <minutes>               Execute for a period of minutes then exit with status 0 (default: null)
+    --debug                           output detailed debug info
+    -h, --help                        output usage information
 ```
 
 and also:
@@ -259,19 +298,79 @@ and also:
 ```
 zenbot list-strategies
 
+bollinger
+  description:
+    Buy when (Signal ≤ Lower Bollinger Band) and sell when (Signal ≥ Upper Bollinger Band).
+  options:
+    --period=<value>  period length, same as --period_length (default: 1h)
+    --period_length=<value>  period length, same as --period (default: 1h)
+    --min_periods=<value>  min. number of history periods (default: 52)
+    --bollinger_size=<value>  period size (default: 20)
+    --bollinger_time=<value>  times of standard deviation between the upper band and the moving averages (default: 2)
+    --bollinger_upper_bound_pct=<value>  pct the current price should be near the bollinger upper bound before we sell (default: 0)
+    --bollinger_lower_bound_pct=<value>  pct the current price should be near the bollinger lower bound before we buy (default: 0)
+
+cci_srsi
+  description:
+    Stochastic CCI Strategy
+  options:
+    --period=<value>  period length, same as --period_length (default: 20m)
+    --period_length=<value>  period length, same as --period (default: 20m)
+    --min_periods=<value>  min. number of history periods (default: 30)
+    --ema_acc=<value>  sideways threshold (0.2-0.4) (default: 0.03)
+    --cci_periods=<value>  number of RSI periods (default: 14)
+    --rsi_periods=<value>  number of RSI periods (default: 14)
+    --srsi_periods=<value>  number of RSI periods (default: 9)
+    --srsi_k=<value>  %K line (default: 5)
+    --srsi_d=<value>  %D line (default: 3)
+    --oversold_rsi=<value>  buy when RSI reaches or drops below this value (default: 18)
+    --overbought_rsi=<value>  sell when RSI reaches or goes above this value (default: 85)
+    --oversold_cci=<value>  buy when CCI reaches or drops below this value (default: -90)
+    --overbought_cci=<value>  sell when CCI reaches or goes above this value (default: 140)
+    --constant=<value>  constant (default: 0.015)
+If you have questions about this strategy, contact me... @talvasconcelos
+
+crossover_vwap
+  description:
+    Estimate trends by comparing "Volume Weighted Average Price" to the "Exponential Moving Average".
+  options:
+    --period=<value>  period length, same as --period_length (default: 120m)
+    --period_length=<value>  period length, same as --period (default: 120m)
+    --emalen1=<value>  Length of EMA 1 (default: 30)
+    --smalen1=<value>  Length of SMA 1 (default: 108)
+    --smalen2=<value>  Length of SMA 2 (default: 60)
+    --vwap_length=<value>  Min periods for vwap to start (default: 10)
+    --vwap_max=<value>  Max history for vwap. Increasing this makes it more sensitive to short-term changes (default: 8000)
+
+dema
+  description:
+    Buy when (short ema > long ema) and sell when (short ema < long ema).
+  options:
+    --period=<value>  period length (default: 1h)
+    --min_periods=<value>  min. number of history periods (default: 21)
+    --ema_short_period=<value>  number of periods for the shorter EMA (default: 10)
+    --ema_long_period=<value>  number of periods for the longer EMA (default: 21)
+    --up_trend_threshold=<value>  threshold to trigger a buy signal (default: 0)
+    --down_trend_threshold=<value>  threshold to trigger a sold signal (default: 0)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 9)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 80)
+    --noise_level_pct=<value>  do not trade when short ema is with this % of last short ema, 0 disables this feature (default: 0)
+
 forex_analytics
   description:
     Apply the trained forex analytics model.
   options:
     --modelfile=<value>  modelfile (generated by running `train`), should be in models/ (default: none)
-    --period=<value>  period length of a candlestick (default: 30m) (default: 30m)
+    --period=<value>  period length of a candlestick (default: 30m), same as --period_length (default: 30m)
+    --period_length=<value>  period length of a candlestick (default: 30m), same as --period (default: 30m)
     --min_periods=<value>  min. number of history periods (default: 100)
 
 macd
   description:
     Buy when (MACD - Signal > 0) and sell when (MACD - Signal < 0).
   options:
-    --period=<value>  period length (default: 1h)
+    --period=<value>  period length, same as --period_length (default: 1h)
+    --period_length=<value>  period length, same as --period (default: 1h)
     --min_periods=<value>  min. number of history periods (default: 52)
     --ema_short_period=<value>  number of periods for the shorter EMA (default: 12)
     --ema_long_period=<value>  number of periods for the longer EMA (default: 26)
@@ -281,27 +380,42 @@ macd
     --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
     --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
 
+momentum
+  description:
+    MOM = Close(Period) - Close(Length)
+  options:
+    --momentum_size=<value>  number of periods to look back for momentum (default: 5)
+
 neural
   description:
     Use neural learning to predict future price. Buy = mean(last 3 real prices) < mean(current & last prediction)
   options:
-    --period=<value>  period length - make sure to lower your poll trades time to lower than this value (default: 5s)
+    --period=<value>  period length - make sure to lower your poll trades time to lower than this value. Same as --period_length (default: 1m)
+    --period_length=<value>  period length - make sure to lower your poll trades time to lower than this value. Same as --period (default: 1m)
     --activation_1_type=<value>  Neuron Activation Type: sigmoid, tanh, relu (default: sigmoid)
-    --neurons_1=<value>  Neurons in layer 1 Shoot for atleast 100 (default: 5)
-    --depth=<value>  Rows of data to predict ahead for matches/learning (default: 3)
+    --neurons_1=<value>  Neurons in layer 1 Shoot for atleast 100 (default: 1)
+    --depth=<value>  Rows of data to predict ahead for matches/learning (default: 1)
     --selector=<value>  Selector (default: Gdax.BTC-USD)
-    --min_periods=<value>  Periods to calculate learn from (default: 100)
-    --min_predict=<value>  Periods to predict next number from (default: 10)
-    --momentum=<value>  momentum of prediction (default: 0)
-    --decay=<value>  decay of prediction, use teeny tiny increments (default: 0)
-    --threads=<value>  Number of processing threads you'd like to run (best for sim) (default: 8)
-    --learns=<value>  Number of times to 'learn' the neural network with past data (default: 100)
+    --min_periods=<value>  Periods to calculate learn from (default: 1000)
+    --min_predict=<value>  Periods to predict next number from (default: 1)
+    --momentum=<value>  momentum of prediction (default: 0.9)
+    --decay=<value>  decay of prediction, use teeny tiny increments (default: 0.1)
+    --threads=<value>  Number of processing threads you'd like to run (best for sim) (default: 1)
+    --learns=<value>  Number of times to 'learn' the neural network with past data (default: 2)
+
+noop
+  description:
+    Just do nothing. Can be used to e.g. generate candlesticks for training the genetic forex strategy.
+  options:
+    --period=<value>  period length, same as --period_length (default: 30m)
+    --period_length=<value>  period length, same as --period (default: 30m)
 
 rsi
   description:
     Attempts to buy low and sell high by tracking RSI high-water readings.
   options:
-    --period=<value>  period length (default: 2m)
+    --period=<value>  period length, same as --period_length (default: 2m)
+    --period_length=<value>  period length, same as --period (default: 2m)
     --min_periods=<value>  min. number of history periods (default: 52)
     --rsi_periods=<value>  number of RSI periods
     --oversold_rsi=<value>  buy when RSI reaches or drops below this value (default: 30)
@@ -314,7 +428,8 @@ sar
   description:
     Parabolic SAR
   options:
-    --period=<value>  period length (default: 2m)
+    --period=<value>  period length, same as --period_length (default: 2m)
+    --period_length=<value>  period length, same as --period (default: 2m)
     --min_periods=<value>  min. number of history periods (default: 52)
     --sar_af=<value>  acceleration factor for parabolic SAR (default: 0.015)
     --sar_max_af=<value>  max acceleration factor for parabolic SAR (default: 0.3)
@@ -323,7 +438,8 @@ speed
   description:
     Trade when % change from last two 1m periods is higher than average.
   options:
-    --period=<value>  period length (default: 1m)
+    --period=<value>  period length, same as --period_length (default: 1m)
+    --period_length=<value>  period length, same as --period (default: 1m)
     --min_periods=<value>  min. number of history periods (default: 3000)
     --baseline_periods=<value>  lookback periods for volatility baseline (default: 3000)
     --trigger_factor=<value>  multiply with volatility baseline EMA to get trigger value (default: 1.6)
@@ -332,7 +448,8 @@ srsi_macd
   description:
     Stochastic MACD Strategy
   options:
-    --period=<value>  period length (default: 30m)
+    --period=<value>  period length, same as --period_length (default: 30m)
+    --period_length=<value>  period length, same as --period (default: 30m)
     --min_periods=<value>  min. number of history periods (default: 200)
     --rsi_periods=<value>  number of RSI periods
     --srsi_periods=<value>  number of RSI periods (default: 9)
@@ -350,7 +467,8 @@ stddev
   description:
     Buy when standard deviation and mean increase, sell on mean decrease.
   options:
-    --period=<value>  period length, set poll trades to 100ms, poll order 1000ms (default: 100ms)
+    --period=<value>  period length, set poll trades to 100ms, poll order 1000ms. Same as --period_length (default: 100ms)
+    --period_length=<value>  period length, set poll trades to 100ms, poll order 1000ms. Same as --period (default: 100ms)
     --trendtrades_1=<value>  Trades for array 1 to be subtracted stddev and mean from (default: 5)
     --trendtrades_2=<value>  Trades for array 2 to be calculated stddev and mean from (default: 53)
     --min_periods=<value>  min_periods (default: 1250)
@@ -359,7 +477,8 @@ ta_ema
   description:
     Buy when (EMA - last(EMA) > 0) and sell when (EMA - last(EMA) < 0). Optional buy on low RSI.
   options:
-    --period=<value>  period length (default: 10m)
+    --period=<value>  period length, same as --period_length (default: 10m)
+    --period_length=<value>  period length, same as --period (default: 10m)
     --min_periods=<value>  min. number of history periods (default: 52)
     --trend_ema=<value>  number of periods for trend EMA (default: 20)
     --neutral_rate=<value>  avoid trades if abs(trend_ema) under this float (0 to disable, "auto" for a variable filter) (default: 0.06)
@@ -370,7 +489,8 @@ ta_macd
   description:
     Buy when (MACD - Signal > 0) and sell when (MACD - Signal < 0).
   options:
-    --period=<value>  period length (default: 1h)
+    --period=<value>  period length, same as --period_length (default: 1h)
+    --period_length=<value>  period length, same as --period (default: 1h)
     --min_periods=<value>  min. number of history periods (default: 52)
     --ema_short_period=<value>  number of periods for the shorter EMA (default: 12)
     --ema_long_period=<value>  number of periods for the longer EMA (default: 26)
@@ -380,32 +500,100 @@ ta_macd
     --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
     --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
 
+ta_macd_ext
+  description:
+    Buy when (MACD - Signal > 0) and sell when (MACD - Signal < 0) with controllable talib TA types
+  options:
+    --period=<value>  period length, same as --period_length (default: 1h)
+    --min_periods=<value>  min. number of history periods (default: 52)
+    --ema_short_period=<value>  number of periods for the shorter EMA (default: 12)
+    --ema_long_period=<value>  number of periods for the longer EMA (default: 26)
+    --signal_period=<value>  number of periods for the signal EMA (default: 9)
+    --fast_ma_type=<value>  fast_ma_type of talib: SMA, EMA, WMA, DEMA, TEMA, TRIMA, KAMA, MAMA, T3 (default: null)
+    --slow_ma_type=<value>  slow_ma_type of talib: SMA, EMA, WMA, DEMA, TEMA, TRIMA, KAMA, MAMA, T3 (default: null)
+    --signal_ma_type=<value>  signal_ma_type of talib: SMA, EMA, WMA, DEMA, TEMA, TRIMA, KAMA, MAMA, T3 (default: null)
+    --default_ma_type=<value>  set default ma_type for fast, slow and signal. You are able to overwrite single types separately (fast_ma_type, slow_ma_type, signal_ma_type) (default: SMA)
+    --up_trend_threshold=<value>  threshold to trigger a buy signal (default: 0)
+    --down_trend_threshold=<value>  threshold to trigger a sold signal (default: 0)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
+
+ta_trix
+  description:
+    TRIX - 1-day Rate-Of-Change (ROC) of a Triple Smooth EMA with rsi oversold
+  options:
+    --period=<value>  period length eg 10m (default: 5m)
+    --timeperiod=<value>  timeperiod for TRIX (default: 30)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
+
 trend_ema (default)
   description:
     Buy when (EMA - last(EMA) > 0) and sell when (EMA - last(EMA) < 0). Optional buy on low RSI.
   options:
-    --period=<value>  period length (default: 2m)
+    --period=<value>  period length, same as --period_length (default: 2m)
+    --period_length=<value>  period length, same as --period (default: 2m)
     --min_periods=<value>  min. number of history periods (default: 52)
     --trend_ema=<value>  number of periods for trend EMA (default: 26)
     --neutral_rate=<value>  avoid trades if abs(trend_ema) under this float (0 to disable, "auto" for a variable filter) (default: auto)
     --oversold_rsi_periods=<value>  number of periods for oversold RSI (default: 14)
     --oversold_rsi=<value>  buy when RSI reaches this value (default: 10)
 
+ta_ppo
+  description:
+     PPO - Percentage Price Oscillator with rsi oversold
+  options:
+    --period=<value>  period length, same as --period_length (default: 10m)
+    --ema_short_period=<value>  number of periods for the shorter EMA (default: 12)
+    --ema_long_period=<value>  number of periods for the longer EMA (default: 26)
+    --signal_period=<value>  number of periods for the signal EMA (default: 9)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
+    --ma_type==<value> moving average type of talib: SMA, EMA, WMA, DEMA, TEMA, TRIMA, KAMA, MAMA, T3 (default: SMA)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
+
+ta_ultosc
+  description:
+    ULTOSC - Ultimate Oscillator with rsi oversold
+  options:
+    --period=<value>  period length eg 5m (default: 5m)
+    --min_periods=<value>  min. number of history periods (default: 52)
+    --signal=<value>  Provide signal and indicator "simple" (buy@65, sell@50), "low" (buy@65, sell@30), "trend" (buy@30, sell@70) (default: simple)
+    --timeperiod1=<value>  talib ULTOSC timeperiod1 (default: 7)
+    --timeperiod2=<value>  talib ULTOSC timeperiod2 (default: 14)
+    --timeperiod3=<value>  talib ULTOSC timeperiod3 (default: 28)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 90)
+
+ti_hma
+  description:
+    HMA - Hull Moving Average
+  options:
+    --period=<value>  period length eg 10m (default: 15m)
+    --min_periods=<value>  min. number of history periods (default: 52)
+    --trend_hma=<value>  number of periods for trend hma (default: 36)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 25)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 70)
+
 trendline
   description:
     Calculate a trendline and trade when trend is positive vs negative.
   options:
-    --period=<value>  period length (default: 10s)
-    --trendtrades_1=<value>  Number of trades to load into data (default: 100)
-    --lastpoints=<value>  Number of short points at beginning of trendline (default: 3)
-    --avgpoints=<value>  Number of long points at end of trendline (default: 53)
-    --min_periods=<value>  Minimum trades to backfill with (trendtrades_1 + about ~10) (default: 1250)
+    --period=<value>  period length (default: 30s)
+    --period_length=<value>  period length (default: 30s)
+    --lastpoints=<value>  Number of trades for short trend average (default: 100)
+    --avgpoints=<value>  Number of trades for long trend average (default: 1000)
+    --lastpoints2=<value>  Number of trades for short trend average (default: 10)
+    --avgpoints2=<value>  Number of trades for long trend average (default: 100)
+    --min_periods=<value>  Basically avgpoints + a BUNCH of more preroll periods for anything less than 5s period (default: 15000)
+    --markup_sell_pct=<value>  test (default: 0)
+    --markdown_buy_pct=<value>  test (default: 0)
 
 trust_distrust
   description:
     Sell when price higher than $sell_min% and highest point - $sell_threshold% is reached. Buy when lowest price point + $buy_threshold% reached.
   options:
-    --period=<value>  period length (default: 30m)
+    --period=<value>  period length, same as --period_length (default: 30m)
+    --period_length=<value>  period length, same as --period (default: 30m)
     --min_periods=<value>  min. number of history periods (default: 52)
     --sell_threshold=<value>  sell when the top drops at least below this percentage (default: 2)
     --sell_threshold_max=<value>  sell when the top drops lower than this max, regardless of sell_min (panic sell, 0 to disable) (default: 0)
@@ -413,6 +601,23 @@ trust_distrust
     --buy_threshold=<value>  buy when the bottom increased at least above this percentage (default: 2)
     --buy_threshold_max=<value>  wait for multiple buy signals before buying (kill whipsaw, 0 to disable) (default: 0)
     --greed=<value>  sell if we reach this much profit (0 to be greedy and either win or lose) (default: 0)
+
+wavetrend
+  description:
+    Buy when (Signal < Oversold) and sell when (Signal > Overbought).
+  options:
+    --period=<value>  period length, same as --period_length (default: 1h)
+    --period_length=<value>  period length, same as --period (default: 1h)
+    --min_periods=<value>  min. number of history periods (default: 21)
+    --wavetrend_channel_length=<value>  wavetrend channel length (default: 10)
+    --wavetrend_average_length=<value>  wavetrend average length (default: 21)
+    --wavetrend_overbought_1=<value>  wavetrend overbought limit 1 (default: 60)
+    --wavetrend_overbought_2=<value>  wavetrend overbought limit 2 (default: 53)
+    --wavetrend_oversold_1=<value>  wavetrend oversold limit 1 (default: -60)
+    --wavetrend_oversold_2=<value>  wavetrend oversold limit 2 (default: -53)
+    --wavetrend_trends=<value>  act on trends instead of limits (default: false)
+    --overbought_rsi_periods=<value>  number of periods for overbought RSI (default: 9)
+    --overbought_rsi=<value>  sold when RSI exceeds this value (default: 80)
 ```
 
 ## Interactive controls
@@ -424,6 +629,10 @@ While the `trade` command is running, Zenbot will respond to these keypress comm
 - Pressing `m` or `M` will toggle manual mode (`--manual`)
 
 These commands can be used to override what the bot is doing. Or, while running with the `--manual` flag, this allows you to make all the trade decisions yourself.
+
+### noop strategy
+
+If you want to use the bot without it trading for you, but just use it for the balance overview and manual trades, you can start the bot with `--strategy noop`, the bot will not trade automatically.
 
 ## Conf/argument override files
 
@@ -448,9 +657,17 @@ c.max_slippage_pct = 10
 c.order_adjust_time = 10000
 ```
 
+## GUI
+
+A basic web UI is available at the url stated during startup.  This port can be configured in the conf.js or randomly assigned.
+In it's infancy, there are a few caveats with the current UI.
+- In order to have statistics displayed, they must first be dumped from the CLI.  Pressing `D` will refresh the statistics on each refresh of the dashboard.
+- Currently the data is mostly static with the exception of the tradingview charts.
+- Currently only READ-ONLY
+
 ## Reading the console output
 
-![console](https://rawgit.com/carlos8f/zenbot/master/assets/console.png)
+![console](https://rawgit.com/deviavir/zenbot/master/assets/console.png)
 
 From left to right:
 
@@ -517,7 +734,7 @@ Trade when % change from last two 1m periods is higher than average.
 
 - Trade frequency is adjusted with a combination of `--period` and `--trend_ema`. For example, if you want more frequent trading, try `--period=5m` or `--trend_ema=15` or both. If you get too many ping-pong trades or losses from fees, try increasing `period` or `trend_ema` or increasing `neutral_rate`.
 - Sometimes it's tempting to tell the bot trade very often. Try to resist this urge, and go for quality over quantity, since each trade comes with a decent amount of slippage and whipsaw risk.
-- `--oversold_rsi=<rsi>` will try to buy when the price dives. This is one of the ways to get profit above buy/hold, but setting it too high might result in a loss of the price continues to fall.
+- `--oversold_rsi=<rsi>` will try to buy when the price dives. This is one of the ways to get profit above buy/hold, but setting it too high might result in a loss if the price continues to fall.
 - In a market with predictable price surges and corrections, `--profit_stop_enable_pct=10` will try to sell when the last buy hits 10% profit and then drops to 9% (the drop % is set with `--profit_stop_pct`). However in strong, long uptrends this option may end up causing a sell too early.
 - For Kraken and GDAX you may wish to use `--order_type="taker"`, this uses market orders instead of limit orders. You usually pay a higher fee, but you can be sure that your order is filled instantly. This means that the sim will more closely match your live trading. Please note that GDAX does not charge maker fees (limit orders), so you will need to choose between not paying fees and running the risk orders do not get filled on time, or paying somewhat high % of fees and making sure your orders are always filled on time.
 
@@ -601,66 +818,25 @@ Or to sell 10% of your BTC,
 zenbot sell gdax.BTC-USD --pct=10
 ```
 
-## Changelog
-
-- [v4.0.5](https://github.com/carlos8f/zenbot/releases/tag/v4.0.5) (Latest)
-    - handle insufficient funds errors from gdax
-    - new trend_ema defaults adjusted for latest btc movements: 20m period, neutral_rate=0
-    - include more data in sim output
-    - remove rarely useful trend_ema options
-    - avoid abort in trader on failed getTrades()
-- v4.0.4
-    - debugging for polo odd results
-    - sim: simplify and correct makerFee assessment
-    - fix conf path in API credentials errors
-    - fix order total under 0.0001 error on polo
-    - Docker: extend README slightly (thanks [@DeviaVir](https://github.com/deviavir) and [@egorbenko](https://github.com/egorbenko))
-    - docker-compose: do not expose mongodb by default! (thanks [@DeviaVir](https://github.com/deviavir))
-- v4.0.3
-    - fix for docker mongo host error
-    - link for new Discord chat!
-    - fix polo crash on getOrder weird result
-    - fix oversold_rsi trigger while in preroll
-    - fix polo "not enough..." errors
-    - fancy colors for price report
-    - display product id in report
-    - fix poloniex backfill batches too big, mongo timeouts
-    - fix cursorTo() crash on some node installs
-    - memDump for debugging order failures
-    - fix column spacing on progress report
-- v4.0.2
-    - minor overhaul to trend_ema strat - added whipsaw filtering via std. deviation (`--neutral_rate=auto`)
-    - trim preroll of sim result graph
-- v4.0.1
-    - Added .dockerignore (thanks [@sulphur](https://github.com/sulphur))
-    - fix crashing on mongo timeout during backfill
-    - fix gaps in poloniex backfill
-    - default backfill days 90 -> 14
-
-## TODO
-
-- cancel pending orders on SIGINT
-- tool to generate graph and stats from live or paper trading sessions
-- review PRs
-- web UI with graphs and logs
-- "reaper" to automatically prune trades collection to a certain day length
-- "lite mode" for trader, an option to run without MongoDB
-
 ## Chat with other Zenbot users
 
-[![zenbot logo](https://rawgit.com/carlos8f/zenbot/master/assets/discord.png)](https://discord.gg/ZdAd2gP)
+[![zenbot logo](https://rawgit.com/deviavir/zenbot/master/assets/discord.png)](https://discord.gg/ZdAd2gP)
 
 Zenbot has a Discord chat! You can get in [through this invite link](https://discord.gg/ZdAd2gP).
 
 ## Donate
 
-P.S., some have asked for how to donate to Zenbot development. I accept donations at **my Bitcoin address** Here:
+P.S., some have asked for how to donate to Zenbot development. We accept donations at **Bitcoin addresses** below:
 
-### carlos8f's BTC
+### carlos8f's BTC (original zenbot author)
 
 `187rmNSkSvehgcKpBunre6a5wA5hQQop6W`
 
-![zenbot logo](https://rawgit.com/carlos8f/zenbot/master/assets/zenbot_square.png)
+### DeviaVir's BTC (current maintainer)
+
+`3BZojxm9q8uGWvvsudLCmqfBhtT7ceeSQk`
+
+![zenbot logo](https://rawgit.com/deviavir/zenbot/master/assets/zenbot_square.png)
 
 Thanks!
 
@@ -668,8 +844,8 @@ Thanks!
 
 ### License: MIT
 
-- Copyright (C) 2017 Carlos Rodriguez
-- Copyright (C) 2017 Terra Eclipse, Inc. (http://www.terraeclipse.com/)
+- Copyright (C) 2018 Carlos Rodriguez
+- Copyright (C) 2018 Terra Eclipse, Inc. (http://www.terraeclipse.com/)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the &quot;Software&quot;), to deal

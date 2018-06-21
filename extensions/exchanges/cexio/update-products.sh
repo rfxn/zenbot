@@ -1,27 +1,34 @@
 #!/usr/bin/env node
-var request = require('micro-request')
-request('https://cex.io/api/currency_limits', {headers: {'User-Agent': 'zenbot/4'}}, function (err, resp, body) {
-  if (err) throw err
-  if (resp.statusCode !== 200) {
-    var err = new Error('non-200 status: ' + resp.statusCode)
-    err.code = 'HTTP_STATUS'
-    err.body = body
-    console.error(err)
-    process.exit(1)
-  }
+const ccxt = require('ccxt')
+const path = require('path')
+var client = new ccxt.cex()
+client.fetchMarkets().then(result => {
   var products = []
-  var pairs = body.data.pairs
-  pairs.forEach(function (product) {
+  result.forEach(function (product) {
+    var increment = ''
+    if (product.info.symbol1 === 'BTC' && product.info.symbol2 !== 'RUB') {
+      increment = '0.1'
+    } else if (product.info.symbol1 === 'BTC' && product.info.symbol2 === 'RUB') {
+      increment = '1'
+    } else if (product.info.symbol2 === 'BTC' && (product.info.symbol1 === 'XRP' || product.info.symbol1 === 'GHS')) {
+      increment = '0.00000001'
+    } else if (product.info.symbol2 === 'BTC') {
+      increment = '0.000001'
+    } else if (product.info.symbol1 === 'XRP') {
+      increment = '0.0001'
+    } else {
+      increment = '0.01'
+    }
     products.push({
-      asset: product.symbol1,
-      currency: product.symbol2,
-      min_size: product.minLotSize.toString(),
-      max_size: product.maxLotSize != null ? product.maxLotSize.toString() : product.maxLotSize,
-      increment: '0.00000001',
-      label: product.symbol1 + '/' + product.symbol2
+      asset: product.info.symbol1,
+      currency: product.info.symbol2,
+      min_size: product.info.minLotSize.toString(),
+      max_size: product.info.maxLotSize != null ? product.info.maxLotSize.toString() : product.info.maxLotSize,
+      increment: increment,
+      label: product.id
     })
   })
-  var target = require('path').resolve(__dirname, 'products.json')
+  var target = path.resolve(__dirname, 'products.json')
   require('fs').writeFileSync(target, JSON.stringify(products, null, 2))
   console.log('wrote', target)
   process.exit()
