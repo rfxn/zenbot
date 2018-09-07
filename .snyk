@@ -1,0 +1,13 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.12.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:mime:20170907':
+    - poloniex.js > request > mime:
+        patched: '2018-09-07T08:13:58.173Z'
+    - poloniex.js > request > form-data > mime:
+        patched: '2018-09-07T08:13:58.173Z'
+  'npm:request:20160119':
+    - node-prowl > request:
+        patched: '2018-09-07T08:13:58.173Z'
